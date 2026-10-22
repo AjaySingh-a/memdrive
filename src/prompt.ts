@@ -1,16 +1,39 @@
+import { isatty } from "node:tty";
+
 // Terminal input that works with hidden passwords. Returns null when there is no
 // interactive terminal (scheduled runs, Claude's Bash tool, pipes), so callers can
 // fall back to a safe default instead of hanging.
 export function canPrompt(): boolean {
-  return !!process.stdin.isTTY;
+  return isatty(0);
+}
+
+export async function readInput(question: string, opts: { hidden?: boolean } = {}): Promise<string | null> {
+  if (!canPrompt()) return null;
+  return process.platform === "win32" ? readInputRaw(question, opts) : readInputShell(question, opts);
+}
+
+// macOS and Linux: let the shell read the line. Bun cannot watch a terminal opened as
+// /dev/tty on macOS (kqueue EINVAL), which is exactly what `curl ... | bash` gives us.
+// The trap restores echo even if the user presses Ctrl-C at the password prompt.
+function readInputShell(question: string, opts: { hidden?: boolean }): string | null {
+  process.stdout.write(question);
+  const script = opts.hidden
+    ? 'trap "stty echo 2>/dev/null" EXIT INT TERM; stty -echo 2>/dev/null; IFS= read -r line; s=$?; printf "%s" "$line"; exit $s'
+    : 'IFS= read -r line; s=$?; printf "%s" "$line"; exit $s';
+  const p = Bun.spawnSync(["/bin/sh", "-c", script], { stdin: "inherit", stdout: "pipe", stderr: "inherit" });
+  if (opts.hidden) process.stdout.write("\n");
+  if (p.signalCode) throw new Error("cancelled");
+  const value = p.stdout.toString();
+  if (p.exitCode !== 0 && value === "") return null; // end of input
+  return value;
 }
 
 // Keystrokes that arrived after an Enter (fast typing or a paste) belong to the next question.
 let pending = "";
 
-export function readInput(question: string, opts: { hidden?: boolean } = {}): Promise<string | null> {
+// Windows: raw-mode console input.
+function readInputRaw(question: string, opts: { hidden?: boolean }): Promise<string | null> {
   const stdin = process.stdin;
-  if (!stdin.isTTY) return Promise.resolve(null);
   process.stdout.write(question);
   stdin.setRawMode(true);
   stdin.setEncoding("utf8");
