@@ -28,8 +28,9 @@ curl -fsSL https://raw.githubusercontent.com/AjaySingh-a/memdrive/main/install.s
 irm https://raw.githubusercontent.com/AjaySingh-a/memdrive/main/install.ps1 | iex
 ```
 
-The installer opens your browser and asks you to allow access to Google Drive, makes
-the first backup, and turns on automatic backups. That's it.
+You run this **once**. It installs the `memdrive` command and runs `memdrive setup`, which
+opens your browser to allow access to Google Drive, makes the first backup, and turns on
+automatic backups. That's it. After that, use the `memdrive` commands below whenever you need them.
 
 ## What it does
 
@@ -43,6 +44,8 @@ the first backup, and turns on automatic backups. That's it.
 ## Commands
 
 ```
+memdrive help                       list all commands
+memdrive setup                      connect Google Drive, back up now, turn on automatic backups
 memdrive status                     connection, schedule, last backup
 memdrive backup                     back up now
 memdrive list                       backups on Drive, for all your computers
@@ -53,6 +56,26 @@ memdrive schedule on|off            automatic backups on or off
 memdrive config keepDays 60         settings: intervalHours, keepDays, keepMin, machine
 memdrive disconnect                 stop backups and revoke Google access
 ```
+
+### Switching to another Google account
+
+```
+memdrive disconnect
+memdrive setup
+```
+
+Pick the other account in the browser. If the browser skips the account picker, open the
+link that memdrive prints in a private/incognito window. Backups in the old account stay there.
+
+### Uninstalling
+
+```
+memdrive disconnect
+rm -rf ~/.memdrive ~/.local/bin/memdrive
+```
+
+On Windows, run `memdrive disconnect`, then delete `%USERPROFILE%\.memdrive`. To delete the
+backups too, delete the `memdrive` folder in Google Drive. claude-mem itself is not affected.
 
 ### Moving to a new computer
 

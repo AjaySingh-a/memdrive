@@ -34,7 +34,21 @@
   <p class="label">Windows (PowerShell)</p>
   <pre><code>irm https://raw.githubusercontent.com/AjaySingh-a/memdrive/main/install.ps1 | iex</code></pre>
   <p>Your browser opens and asks you to allow access to Google Drive. memdrive makes the first
-    backup and turns on automatic backups.</p>
+    backup and turns on automatic backups. You only run the install command once.</p>
+
+  <h2>Commands</h2>
+  <p>After installing, use these whenever you need them:</p>
+  <pre><code>memdrive status         is everything working?
+memdrive backup         back up now
+memdrive list           your backups on Google Drive
+memdrive restore        bring back this computer's latest backup
+memdrive restore NAME   bring back another computer's backup
+memdrive setup          connect Google Drive and turn on automatic backups
+memdrive disconnect     stop backups and remove Google Drive access
+memdrive help           all commands</code></pre>
+  <p class="note">To use another Google account, run <code>memdrive disconnect</code>, then
+    <code>memdrive setup</code>. To uninstall, run <code>memdrive disconnect</code> and delete
+    the <code>.memdrive</code> folder in your home folder.</p>
 
   <h2>What it does</h2>
   <ul>
