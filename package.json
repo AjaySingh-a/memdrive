@@ -1,0 +1,16 @@
+{
+  "name": "memdrive",
+  "version": "0.1.0",
+  "description": "Free Google Drive backup and restore for claude-mem",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "memdrive": "src/cli.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "engines": {
+    "bun": ">=1.1.0"
+  }
+}
