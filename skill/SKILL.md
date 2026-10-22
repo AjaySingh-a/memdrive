@@ -30,6 +30,7 @@ Run it with the Bash tool. If `memdrive` is not on PATH, use `~/.local/bin/memdr
 | `memdrive disconnect` | turn off automatic backups and revoke Google access (backups on Drive are kept) |
 | `memdrive schedule on\|off` | turn automatic backups on or off |
 | `memdrive config <key> <value>` | `intervalHours`, `keepDays`, `keepMin`, `machine` |
+| `memdrive update` | update memdrive now (it also auto-updates once a day) |
 | `memdrive help` | all commands |
 
 ## Backup passwords

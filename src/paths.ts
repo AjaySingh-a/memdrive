@@ -17,6 +17,7 @@ export interface Config {
   intervalHours?: number;
   keepDays?: number;
   keepMin?: number;
+  autoUpdate?: boolean;
 }
 
 export interface State {
@@ -25,6 +26,8 @@ export interface State {
   lastFile?: string;
   lastError?: string;
   lastErrorAt?: string;
+  lastUpdateCheckAt?: string;
+  latestVersion?: string;
 }
 
 export function readJson<T>(path: string, fallback: T): T {

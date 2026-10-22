@@ -5,6 +5,7 @@ import { MIN_PASSWORD_LENGTH, createKey, hasKey, saveKey } from "./crypto";
 import { canPrompt, confirm, readInput } from "./prompt";
 import { deleteUnencrypted, findUnencrypted, list, restore } from "./restore";
 import { scheduleOff, scheduleOn, scheduleStatus } from "./schedule";
+import { installSkill, isDevelopmentCopy, isNewer, maybeAutoUpdate, update } from "./update";
 import { HOME_DIR, claudeMemDataDir, loadConfig, loadState, machineName, saveConfig } from "./paths";
 import pkg from "../package.json";
 
@@ -21,7 +22,8 @@ Usage:
   memdrive disconnect                turn off backups and revoke Google Drive access
   memdrive password                  change the backup password (for new backups)
   memdrive clean-unencrypted         delete old backups made before encryption
-  memdrive config <key> <value>      set intervalHours, keepDays, keepMin or machine
+  memdrive update                    update memdrive to the latest version
+  memdrive config <key> <value>      set intervalHours, keepDays, keepMin, machine, autoUpdate (on/off)
 
 Options:
   --yes                              restore / clean-unencrypted without asking
@@ -128,8 +130,23 @@ async function main(): Promise<void> {
     case "clean-unencrypted":
       await cleanUnencrypted(flag(args, "--yes"));
       break;
-    case "backup":
-      await backup({ ifDue: flag(args, "--if-due") });
+    case "backup": {
+      const ifDue = flag(args, "--if-due");
+      try {
+        await backup({ ifDue });
+      } finally {
+        // Scheduled runs also keep memdrive itself up to date (once a day).
+        if (ifDue) await maybeAutoUpdate();
+      }
+      break;
+    }
+    case "update":
+      await update();
+      break;
+    case "after-update":
+      // Run by the newly installed version right after `update` swapped it in.
+      installSkill();
+      if (scheduleStatus() !== "off") scheduleOn();
       break;
     case "list":
       await list();
@@ -147,7 +164,10 @@ async function main(): Promise<void> {
     case "status": {
       const state = loadState();
       const config = { ...DEFAULTS, ...loadConfig() };
-      console.log(`memdrive ${pkg.version}`);
+      const latest = state.latestVersion;
+      const updateNote = latest && isNewer(latest, pkg.version) ? ` (update available: ${latest}, run: memdrive update)` : "";
+      const auto = isDevelopmentCopy() ? "development copy" : config.autoUpdate === false ? "auto-update off" : "auto-updates daily";
+      console.log(`memdrive ${pkg.version}${updateNote} — ${auto}`);
       console.log(`Google Drive:      ${isConnected() ? "connected" : "not connected (run: memdrive connect)"}`);
       console.log(`Encryption:        ${hasKey() ? "on (backup password set)" : "no backup password yet (run: memdrive setup)"}`);
       console.log(`Automatic backups: ${scheduleStatus()} — every ${config.intervalHours}h when memory changed`);
@@ -165,6 +185,8 @@ async function main(): Promise<void> {
         console.log(JSON.stringify({ ...DEFAULTS, ...config, clientSecret: config.clientSecret ? "(set)" : undefined }, null, 2));
       } else if (["intervalHours", "keepDays", "keepMin"].includes(key) && Number(value) > 0) {
         saveConfig({ ...config, [key]: Number(value) });
+      } else if (key === "autoUpdate" && (value === "on" || value === "off")) {
+        saveConfig({ ...config, autoUpdate: value === "on" });
       } else if (key === "machine" && value) {
         saveConfig({ ...config, machine: value });
       } else {

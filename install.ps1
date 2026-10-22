@@ -3,7 +3,11 @@
 $ErrorActionPreference = "Stop"
 
 $Repo = if ($env:MEMDRIVE_REPO) { $env:MEMDRIVE_REPO } else { "AjaySingh-a/memdrive" }
-$Ref = if ($env:MEMDRIVE_REF) { $env:MEMDRIVE_REF } else { "main" }
+# Install the latest published release (falls back to main if there is none yet).
+$Ref = $env:MEMDRIVE_REF
+if (-not $Ref) {
+  try { $Ref = (Invoke-RestMethod "https://api.github.com/repos/$Repo/releases/latest" -UseBasicParsing).tag_name } catch { $Ref = "main" }
+}
 $Home_ = $env:USERPROFILE
 $AppDir = Join-Path $Home_ ".memdrive\app"
 $BinDir = Join-Path $Home_ ".memdrive\bin"

@@ -4,7 +4,13 @@
 set -euo pipefail
 
 REPO="${MEMDRIVE_REPO:-AjaySingh-a/memdrive}"
-REF="${MEMDRIVE_REF:-main}"
+# Install the latest published release (falls back to main if there is none yet).
+REF="${MEMDRIVE_REF:-}"
+if [ -z "$REF" ]; then
+  REF="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" 2>/dev/null \
+    | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -1 || true)"
+  REF="${REF:-main}"
+fi
 APP_DIR="$HOME/.memdrive/app"
 BIN_DIR="$HOME/.local/bin"
 

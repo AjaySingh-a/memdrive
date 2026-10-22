@@ -38,6 +38,12 @@ The installer also adds a small Claude Code skill (`~/.claude/skills/memdrive`),
 just ask Claude things like *"is my memory backed up?"*, *"back up now"* or *"restore my
 memory from my old laptop"*, and it runs the right memdrive command for you.
 
+## Updates
+
+memdrive updates itself: once a day, the background job checks GitHub for a new
+release and installs it. Run `memdrive update` to update right away, or
+`memdrive config autoUpdate off` to turn automatic updates off.
+
 ## Encryption
 
 Every backup is encrypted on your computer before upload (AES-256-GCM, key derived from
@@ -66,6 +72,7 @@ often contains things like database URLs and passwords that came up in past sess
 
 ```
 memdrive help                       list all commands
+memdrive update                     update memdrive now (it also updates itself once a day)
 memdrive setup                      choose a backup password, connect Google Drive, back up, turn on automatic backups
 memdrive status                     connection, schedule, last backup
 memdrive backup                     back up now
@@ -137,8 +144,8 @@ bun test
 bun src/cli.ts status
 ```
 
-Maintainers: see [docs/google-oauth-setup.md](docs/google-oauth-setup.md) to set up the
-Google OAuth client.
+Maintainers: see [docs/releasing.md](docs/releasing.md) to publish a new version, and
+[docs/google-oauth-setup.md](docs/google-oauth-setup.md) for the Google OAuth client.
 
 ## License
 
