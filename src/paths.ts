@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 export const HOME_DIR = process.env.MEMDRIVE_HOME || join(homedir(), ".memdrive");
 export const CREDENTIALS_FILE = join(HOME_DIR, "credentials.json");
 export const CONFIG_FILE = join(HOME_DIR, "config.json");
+export const ENCRYPTION_FILE = join(HOME_DIR, "encryption.json");
 export const STATE_FILE = join(HOME_DIR, "state.json");
 export const LOG_FILE = join(HOME_DIR, "memdrive.log");
 export const LOCK_FILE = join(HOME_DIR, "backup.lock");
@@ -63,9 +64,38 @@ export function claudeMemDataDir(): string {
   return fallback;
 }
 
+// Some Macs report a hostname like "Unknown_4e-26-90-c0-dd-d7" or "localhost";
+// the user-facing computer name is a better folder name in those cases.
+export function looksGenerated(name: string): boolean {
+  return !name || /^(unknown|localhost)/i.test(name) || /([0-9a-f]{2}[-:_]){5}[0-9a-f]{2}/i.test(name);
+}
+
+function friendlyComputerName(): string {
+  if (process.platform === "darwin") {
+    try {
+      const out = Bun.spawnSync(["scutil", "--get", "ComputerName"]).stdout.toString().trim();
+      if (out) return out;
+    } catch {}
+  }
+  if (process.platform === "win32" && process.env.COMPUTERNAME) return process.env.COMPUTERNAME;
+  return "";
+}
+
+export function sanitizeMachineName(raw: string): string {
+  return raw
+    .replace(/['’]/g, "")
+    .replace(/[^A-Za-z0-9._-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+// The name is saved on the first backup (see backup.ts), so the Drive folder never
+// changes even if the computer is renamed later.
 export function machineName(): string {
-  const raw = loadConfig().machine || hostname().split(".")[0] || "computer";
-  return raw.replace(/[^A-Za-z0-9._-]/g, "-");
+  const saved = loadConfig().machine;
+  if (saved) return sanitizeMachineName(saved);
+  let name = hostname().split(".")[0];
+  if (looksGenerated(name)) name = friendlyComputerName() || name;
+  return sanitizeMachineName(name) || "computer";
 }
 
 export function ensureHomeDir(): void {

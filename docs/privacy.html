@@ -17,7 +17,7 @@
 
   <header>
     <h1>Privacy Policy</h1>
-    <p class="lede">Last updated: October 22, 2026</p>
+    <p class="lede">Last updated: October 22, 2026 (added encryption)</p>
   </header>
 
   <p>memdrive is a free, open-source program that runs on your own computer. It backs up the
@@ -47,8 +47,12 @@
       <code>~/.memdrive/credentials.json</code>, readable only by your user account, plus
       memdrive's settings and log files in the same folder.</li>
     <li><strong>In your Google Drive:</strong> the backup files. A backup contains claude-mem's
-      databases, vector index and settings from your computer. If you put API keys in claude-mem's
-      settings, they are included in your backup.</li>
+      databases, vector index and settings from your computer, <strong>encrypted on your computer</strong>
+      (AES-256-GCM) with a key derived from your backup password. Without that password the files
+      cannot be read by anyone, including Google and the memdrive developers.</li>
+    <li><strong>Your backup password</strong> is never stored or sent anywhere. memdrive keeps only a
+      key derived from it, in <code>~/.memdrive/encryption.json</code> on your computer, readable only by
+      your user account. If you forget the password, nobody can recover it or your backups.</li>
     <li><strong>Anywhere else:</strong> nothing. memdrive has no analytics, telemetry or tracking.</li>
   </ul>
 

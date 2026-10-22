@@ -101,3 +101,12 @@ test("restore clears orphaned journal files", () => {
 test("missing claude-mem gives a clear error", () => {
   expect(() => snapshot(join(dir, "nope"), join(dir, "out"))).toThrow(/claude-mem/);
 });
+
+test("computer names: generated hostnames are detected and names are cleaned up", async () => {
+  const { looksGenerated, sanitizeMachineName } = await import("../src/paths");
+  expect(looksGenerated("Unknown_4e-26-90-c0-dd-d7")).toBe(true);
+  expect(looksGenerated("localhost")).toBe(true);
+  expect(looksGenerated("Ajays-Mac")).toBe(false);
+  expect(sanitizeMachineName("Rahul’s MacBook Air")).toBe("Rahuls-MacBook-Air");
+  expect(sanitizeMachineName("Ajays-Mac")).toBe("Ajays-Mac");
+});

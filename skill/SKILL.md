@@ -10,7 +10,7 @@ It is not an MCP server or plugin, so it will not appear in Claude's config or p
 It takes a safe snapshot of claude-mem's data (`~/.claude-mem`, or `CLAUDE_MEM_DATA_DIR`)
 and uploads it to the user's Google Drive, in `memdrive/<computer name>/`. A background
 scheduler checks every hour and backs up when memory changed and the last backup is
-older than 6 hours.
+older than 6 hours. Every backup is encrypted with the user's backup password before upload.
 
 Run it with the Bash tool. If `memdrive` is not on PATH, use `~/.local/bin/memdrive`
 (macOS/Linux) or `~/.memdrive/bin/memdrive.cmd` (Windows).
@@ -23,18 +23,31 @@ Run it with the Bash tool. If `memdrive` is not on PATH, use `~/.local/bin/memdr
 | `memdrive backup` | back up now |
 | `memdrive list` | backups on Drive, for every computer on this Google account |
 | `memdrive restore [computer] [file] --yes` | replace local memory with a backup |
-| `memdrive setup` | sign in to Google, back up now, turn on automatic backups |
+| `memdrive setup` | choose a backup password, sign in to Google, back up, turn on automatic backups |
+| `memdrive password` | change the backup password (new backups only) |
+| `memdrive clean-unencrypted --yes` | delete old unencrypted backups (made before memdrive 0.2) |
 | `memdrive connect` | sign in to Google only |
 | `memdrive disconnect` | turn off automatic backups and revoke Google access (backups on Drive are kept) |
 | `memdrive schedule on\|off` | turn automatic backups on or off |
 | `memdrive config <key> <value>` | `intervalHours`, `keepDays`, `keepMin`, `machine` |
 | `memdrive help` | all commands |
 
+## Backup passwords
+
+The Bash tool has no keyboard, so it cannot type a password. Never ask the user to tell you
+their backup password, and never put it on a command line. When `setup`, `password`, or a
+restore of another computer's backup needs it, ask the user to run that command in their own
+terminal window (Terminal, iTerm, PowerShell), not through you.
+
+A restore of a backup made on this same computer does not need the password.
+
 ## How to handle common requests
 
 - **"Is my memory backed up?" / "Is memdrive working?"**: run `memdrive status` and explain
   it in plain words. If it shows "Last error", say what went wrong. If it says "not
-  connected", the fix is `memdrive setup`.
+  connected" or "no backup password yet", the fix is `memdrive setup` in their own terminal.
+  If `memdrive list` shows backups marked "NOT encrypted", suggest
+  `memdrive clean-unencrypted --yes`: they may contain passwords from past sessions.
 - **"Back up now"**: run `memdrive backup`.
 - **Sign-in (`setup`, `connect`)**: this opens the user's browser and waits up to 5 minutes
   for them to click Allow. Tell them before you run it. If they want a different Google

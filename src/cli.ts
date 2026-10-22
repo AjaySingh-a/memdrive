@@ -1,7 +1,9 @@
 #!/usr/bin/env bun
 import { connect, disconnect, isConnected } from "./auth";
 import { DEFAULTS, backup } from "./backup";
-import { list, restore } from "./restore";
+import { MIN_PASSWORD_LENGTH, createKey, hasKey, saveKey } from "./crypto";
+import { canPrompt, confirm, readInput } from "./prompt";
+import { deleteUnencrypted, findUnencrypted, list, restore } from "./restore";
 import { scheduleOff, scheduleOn, scheduleStatus } from "./schedule";
 import { HOME_DIR, claudeMemDataDir, loadConfig, loadState, machineName, saveConfig } from "./paths";
 import pkg from "../package.json";
@@ -17,10 +19,12 @@ Usage:
   memdrive schedule on|off           turn automatic backups on or off
   memdrive connect                   connect Google Drive
   memdrive disconnect                turn off backups and revoke Google Drive access
+  memdrive password                  change the backup password (for new backups)
+  memdrive clean-unencrypted         delete old backups made before encryption
   memdrive config <key> <value>      set intervalHours, keepDays, keepMin or machine
 
 Options:
-  --yes                              restore without asking for confirmation
+  --yes                              restore / clean-unencrypted without asking
   --client-id, --client-secret       use your own Google OAuth client (with connect/setup)
 `;
 
@@ -44,6 +48,52 @@ function applyClientOptions(args: string[]): void {
   if (clientId || clientSecret) saveConfig({ ...loadConfig(), clientId, clientSecret });
 }
 
+async function choosePassword(): Promise<void> {
+  console.log(
+    "\nChoose a backup password. Every backup is encrypted with it before it leaves this computer,\n" +
+      "so nobody can read your memory from Google Drive, not even Google.\n" +
+      "Write it down somewhere safe: without it, your backups can never be restored on another computer.\n" +
+      "Tip: use the same password on all your computers.\n",
+  );
+  let password = process.env.MEMDRIVE_PASSWORD ?? null;
+  if (password === null) {
+    if (!canPrompt()) {
+      throw new Error("memdrive needs you to choose a backup password. Run `memdrive setup` in your own terminal window.");
+    }
+    for (;;) {
+      const first = await readInput("Backup password: ", { hidden: true });
+      if (first === null) throw new Error("no password entered");
+      if (first.length < MIN_PASSWORD_LENGTH) {
+        console.log(`Use at least ${MIN_PASSWORD_LENGTH} characters.`);
+        continue;
+      }
+      const second = await readInput("Type it again: ", { hidden: true });
+      if (first !== second) {
+        console.log("The passwords don't match, try again.");
+        continue;
+      }
+      password = first;
+      break;
+    }
+  }
+  if (password.length < MIN_PASSWORD_LENGTH) throw new Error(`the backup password must be at least ${MIN_PASSWORD_LENGTH} characters`);
+  saveKey(createKey(password));
+  console.log("Backup password set.");
+}
+
+async function cleanUnencrypted(yes: boolean): Promise<void> {
+  const old = await findUnencrypted();
+  if (old.length === 0) {
+    console.log("No unencrypted backups on Google Drive.");
+    return;
+  }
+  console.log(`\nFound ${old.length} old backup(s) on Google Drive that are NOT encrypted:`);
+  for (const { folder, file } of old) console.log(`  ${folder}/${file.name}`);
+  const ok = yes || (await confirm("Delete them now? Your encrypted backups replace them.", true));
+  if (ok) await deleteUnencrypted(old);
+  else console.log("Kept them. Delete them later with: memdrive clean-unencrypted");
+}
+
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
   const command = args.shift() ?? "help";
@@ -51,9 +101,11 @@ async function main(): Promise<void> {
   switch (command) {
     case "setup": {
       applyClientOptions(args);
+      if (!hasKey()) await choosePassword();
       if (!isConnected()) await connect();
-      console.log("Google Drive connected. Making the first backup...");
+      console.log("Google Drive connected. Making an encrypted backup...");
       await backup();
+      await cleanUnencrypted(false);
       console.log(`Automatic backups on: ${scheduleOn()}`);
       console.log(`\nDone. Your claude-mem memory is backed up to Google Drive / memdrive / ${machineName()}.`);
       console.log("On a new computer: install claude-mem and memdrive, then run `memdrive restore`.");
@@ -68,6 +120,13 @@ async function main(): Promise<void> {
       scheduleOff();
       await disconnect();
       console.log("Automatic backups turned off and Google Drive access revoked. Backups already on Drive were kept.");
+      break;
+    case "password":
+      await choosePassword();
+      console.log("New backups use the new password. Older backups still need the password they were made with.");
+      break;
+    case "clean-unencrypted":
+      await cleanUnencrypted(flag(args, "--yes"));
       break;
     case "backup":
       await backup({ ifDue: flag(args, "--if-due") });
@@ -90,6 +149,7 @@ async function main(): Promise<void> {
       const config = { ...DEFAULTS, ...loadConfig() };
       console.log(`memdrive ${pkg.version}`);
       console.log(`Google Drive:      ${isConnected() ? "connected" : "not connected (run: memdrive connect)"}`);
+      console.log(`Encryption:        ${hasKey() ? "on (backup password set)" : "no backup password yet (run: memdrive setup)"}`);
       console.log(`Automatic backups: ${scheduleStatus()} — every ${config.intervalHours}h when memory changed`);
       console.log(`Last backup:       ${state.lastSuccessAt ? `${new Date(state.lastSuccessAt).toLocaleString()} (${state.lastFile})` : "never"}`);
       if (state.lastError) console.log(`Last error:        ${state.lastError} (${state.lastErrorAt})`);

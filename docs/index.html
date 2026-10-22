@@ -33,8 +33,9 @@
   <pre><code>curl -fsSL https://raw.githubusercontent.com/AjaySingh-a/memdrive/main/install.sh | bash</code></pre>
   <p class="label">Windows (PowerShell)</p>
   <pre><code>irm https://raw.githubusercontent.com/AjaySingh-a/memdrive/main/install.ps1 | iex</code></pre>
-  <p>Your browser opens and asks you to allow access to Google Drive. memdrive makes the first
-    backup and turns on automatic backups. You only run the install command once.</p>
+  <p>memdrive asks you to choose a backup password, then your browser opens to allow access to
+    Google Drive. It makes the first encrypted backup and turns on automatic backups. You only run
+    the install command once.</p>
 
   <h2>Commands</h2>
   <p>After installing, use these whenever you need them:</p>
@@ -45,6 +46,7 @@ memdrive restore        bring back this computer's latest backup
 memdrive restore NAME   bring back another computer's backup
 memdrive setup          connect Google Drive and turn on automatic backups
 memdrive disconnect     stop backups and remove Google Drive access
+memdrive password       change the backup password
 memdrive help           all commands</code></pre>
   <p class="note">To use another Google account, run <code>memdrive disconnect</code>, then
     <code>memdrive setup</code>. To uninstall, run <code>memdrive disconnect</code> and delete
@@ -55,13 +57,14 @@ memdrive help           all commands</code></pre>
     <li>Checks every hour, and backs up when your memory has changed and the last backup is more than 6 hours old.</li>
     <li>Saves backups to <strong>Google Drive → memdrive → your computer's name</strong>.</li>
     <li>Keeps your newest 5 backups always, and removes ones older than 30 days.</li>
-    <li>Restores on any computer with <code>memdrive restore</code>.</li>
+    <li>Encrypts every backup with your backup password before upload, so nobody can read it from Drive.</li>
+    <li>Restores on any computer with <code>memdrive restore</code> and your backup password.</li>
   </ul>
 
   <h2>Your data</h2>
   <p>memdrive uses Google's <code>drive.file</code> permission, so it can only see the files it
     created. It cannot read anything else in your Drive. There is no memdrive server: backups go
-    straight from your computer to your Google Drive. Read the <a href="privacy.html">privacy policy</a>.</p>
+    straight from your computer to your Google Drive, encrypted with a password only you know. Read the <a href="privacy.html">privacy policy</a>.</p>
 
   <footer>
     memdrive is an independent open-source project (MIT license). It is not made by or affiliated

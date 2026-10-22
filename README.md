@@ -29,14 +29,29 @@ irm https://raw.githubusercontent.com/AjaySingh-a/memdrive/main/install.ps1 | ie
 ```
 
 You run this **once**. It installs the `memdrive` command and runs `memdrive setup`, which
-opens your browser to allow access to Google Drive, makes the first backup, and turns on
-automatic backups. That's it. After that, use the `memdrive` commands below whenever you need them.
+asks you to choose a **backup password**, opens your browser to allow access to Google
+Drive, makes the first encrypted backup, and turns on automatic backups. That's it. After that, use the `memdrive` commands below whenever you need them.
 
 ## Works with Claude Code
 
 The installer also adds a small Claude Code skill (`~/.claude/skills/memdrive`), so you can
 just ask Claude things like *"is my memory backed up?"*, *"back up now"* or *"restore my
 memory from my old laptop"*, and it runs the right memdrive command for you.
+
+## Encryption
+
+Every backup is encrypted on your computer before upload (AES-256-GCM, key derived from
+your backup password with scrypt), so nobody who gets hold of the file — not Google, not
+someone with access to your Drive — can read it. This matters because claude-mem's memory
+often contains things like database URLs and passwords that came up in past sessions.
+
+- The password itself is never stored. memdrive keeps only the derived key, in
+  `~/.memdrive/encryption.json` (readable only by you), so automatic backups run unattended.
+- **Write the password down.** Restoring on another computer needs it, and there is no way
+  to recover it.
+- `memdrive password` changes it for new backups; older backups keep their old password.
+- Backups made before memdrive 0.2 were not encrypted. `memdrive setup` offers to delete
+  them, or run `memdrive clean-unencrypted`.
 
 ## What it does
 
@@ -51,7 +66,7 @@ memory from my old laptop"*, and it runs the right memdrive command for you.
 
 ```
 memdrive help                       list all commands
-memdrive setup                      connect Google Drive, back up now, turn on automatic backups
+memdrive setup                      choose a backup password, connect Google Drive, back up, turn on automatic backups
 memdrive status                     connection, schedule, last backup
 memdrive backup                     back up now
 memdrive list                       backups on Drive, for all your computers
@@ -61,6 +76,8 @@ memdrive restore <computer> <file>  restore a specific backup
 memdrive schedule on|off            automatic backups on or off
 memdrive config keepDays 60         settings: intervalHours, keepDays, keepMin, machine
 memdrive disconnect                 stop backups and revoke Google access
+memdrive password                   change the backup password (for new backups)
+memdrive clean-unencrypted          delete old unencrypted backups (made before 0.2)
 ```
 
 ### Switching to another Google account
@@ -88,7 +105,7 @@ backups too, delete the `memdrive` folder in Google Drive. claude-mem itself is 
 1. Install Claude Code and claude-mem.
 2. Install memdrive (command above) and allow Google Drive access.
 3. `memdrive list` to find your old computer's name, then
-   `memdrive restore <old-computer-name>`.
+   `memdrive restore <old-computer-name>` and type that computer's backup password.
 
 Restore stops claude-mem's background worker, saves your current memory to
 `~/.claude-mem.pre-restore-<time>`, and puts the backup in place. Nothing is deleted.
@@ -98,8 +115,7 @@ Restore stops claude-mem's background worker, saves your current memory to
 - memdrive uses Google's `drive.file` permission: it can only see files **it created**.
   It cannot read anything else in your Drive.
 - Your login is stored in `~/.memdrive/credentials.json`, readable only by you.
-- Backups include claude-mem's `settings.json`. If you put API keys in there, they are
-  in your backups too (in your own Drive).
+- Backups are encrypted with your backup password before they leave your computer.
 
 ## What is backed up
 

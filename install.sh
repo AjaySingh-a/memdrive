@@ -47,5 +47,12 @@ case ":$PATH:" in
   *) say "Add $BIN_DIR to your PATH to use the memdrive command from anywhere." ;;
 esac
 
-say "Connecting Google Drive..."
-"$BIN_DIR/memdrive" setup
+say "Setting up backups..."
+# Under `curl | bash` stdin is the script itself, so read the password from the terminal.
+if [ -t 0 ]; then
+  "$BIN_DIR/memdrive" setup
+elif (: </dev/tty) 2>/dev/null; then
+  "$BIN_DIR/memdrive" setup </dev/tty
+else
+  "$BIN_DIR/memdrive" setup
+fi

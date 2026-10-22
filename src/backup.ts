@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createArchive } from "./archive";
 import { accessToken } from "./auth";
+import { encryptFile, loadKey } from "./crypto";
 import { ROOT_FOLDER, deleteFile, ensureFolder, listBackups, uploadFile } from "./drive";
 import { log } from "./log";
 import {
@@ -12,6 +13,7 @@ import {
   loadConfig,
   loadState,
   machineName,
+  saveConfig,
   saveState,
 } from "./paths";
 import { fingerprint, snapshot } from "./snapshot";
@@ -55,6 +57,12 @@ export async function backup(opts: { ifDue?: boolean } = {}): Promise<void> {
     if (Date.now() - last < config.intervalHours * 3600_000) return;
     if (state.lastFingerprint && state.lastFingerprint === fingerprint(dataDir)) return;
   }
+  const key = loadKey();
+  if (!key) {
+    const message = "no backup password set yet. Run `memdrive setup` in your terminal.";
+    saveState({ ...state, lastError: message, lastErrorAt: new Date().toISOString() });
+    throw new Error(message);
+  }
   if (!takeLock()) {
     log("another backup is already running, skipping");
     return;
@@ -70,11 +78,14 @@ export async function backup(opts: { ifDue?: boolean } = {}): Promise<void> {
       join(stage, "claude-mem", "memdrive-info.json"),
       JSON.stringify({ machine, created: new Date().toISOString(), memdrive: pkg.version, platform: process.platform }, null, 2),
     );
-    const name = `claude-mem-${machine}-${stamp}.tar.gz`;
+    const name = `claude-mem-${machine}-${stamp}.tar.gz.enc`;
+    const plain = join(stage, "backup.tar.gz");
+    await createArchive(plain, stage, "claude-mem");
     const archive = join(stage, name);
-    await createArchive(archive, stage, "claude-mem");
+    encryptFile(plain, archive, key);
+    rmSync(plain);
     const mb = (statSync(archive).size / 1024 / 1024).toFixed(1);
-    log(`snapshot ready: ${stats.databases.length} databases, ${stats.files} files, ${mb} MB`);
+    log(`snapshot ready: ${stats.databases.length} databases, ${stats.files} files, ${mb} MB, encrypted`);
 
     const root = await ensureFolder(ROOT_FOLDER);
     const folder = await ensureFolder(machine, root);
@@ -91,6 +102,7 @@ export async function backup(opts: { ifDue?: boolean } = {}): Promise<void> {
       }
     }
 
+    if (!loadConfig().machine) saveConfig({ ...loadConfig(), machine });
     saveState({ ...state, lastSuccessAt: new Date().toISOString(), lastFingerprint: print, lastFile: name, lastError: undefined, lastErrorAt: undefined });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
