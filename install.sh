@@ -37,6 +37,11 @@ exec "$BUN" "$APP_DIR/src/cli.ts" "\$@"
 EOF
 chmod +x "$BIN_DIR/memdrive"
 
+# Teach Claude Code about memdrive, so "is my memory backed up?" just works.
+SKILL_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills/memdrive"
+mkdir -p "$SKILL_DIR"
+cp "$APP_DIR/skill/SKILL.md" "$SKILL_DIR/SKILL.md"
+
 case ":$PATH:" in
   *":$BIN_DIR:"*) ;;
   *) say "Add $BIN_DIR to your PATH to use the memdrive command from anywhere." ;;

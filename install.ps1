@@ -39,6 +39,12 @@ try {
 New-Item -ItemType Directory -Path $BinDir -Force | Out-Null
 Set-Content -Path (Join-Path $BinDir "memdrive.cmd") -Value "@`"$Bun`" `"$AppDir\src\cli.ts`" %*" -Encoding ASCII
 
+# Teach Claude Code about memdrive, so "is my memory backed up?" just works.
+$ClaudeDir = if ($env:CLAUDE_CONFIG_DIR) { $env:CLAUDE_CONFIG_DIR } else { Join-Path $Home_ ".claude" }
+$SkillDir = Join-Path $ClaudeDir "skills\memdrive"
+New-Item -ItemType Directory -Path $SkillDir -Force | Out-Null
+Copy-Item (Join-Path $AppDir "skill\SKILL.md") (Join-Path $SkillDir "SKILL.md") -Force
+
 $UserPath = [Environment]::GetEnvironmentVariable("Path", "User")
 if (($UserPath -split ";") -notcontains $BinDir) {
   [Environment]::SetEnvironmentVariable("Path", "$UserPath;$BinDir", "User")

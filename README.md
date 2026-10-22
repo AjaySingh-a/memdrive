@@ -32,6 +32,12 @@ You run this **once**. It installs the `memdrive` command and runs `memdrive set
 opens your browser to allow access to Google Drive, makes the first backup, and turns on
 automatic backups. That's it. After that, use the `memdrive` commands below whenever you need them.
 
+## Works with Claude Code
+
+The installer also adds a small Claude Code skill (`~/.claude/skills/memdrive`), so you can
+just ask Claude things like *"is my memory backed up?"*, *"back up now"* or *"restore my
+memory from my old laptop"*, and it runs the right memdrive command for you.
+
 ## What it does
 
 - Every hour it checks whether your claude-mem memory changed. If it did and the last
@@ -71,10 +77,10 @@ link that memdrive prints in a private/incognito window. Backups in the old acco
 
 ```
 memdrive disconnect
-rm -rf ~/.memdrive ~/.local/bin/memdrive
+rm -rf ~/.memdrive ~/.local/bin/memdrive ~/.claude/skills/memdrive
 ```
 
-On Windows, run `memdrive disconnect`, then delete `%USERPROFILE%\.memdrive`. To delete the
+On Windows, run `memdrive disconnect`, then delete `%USERPROFILE%\.memdrive` and `%USERPROFILE%\.claude\skills\memdrive`. To delete the
 backups too, delete the `memdrive` folder in Google Drive. claude-mem itself is not affected.
 
 ### Moving to a new computer
