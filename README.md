@@ -7,6 +7,8 @@ keeps a copy of that memory in **your own Google Drive**, automatically, so it s
 broken laptop and moves with you to a new computer. Free, open source, and your data
 never touches anyone else's server.
 
+Website: <https://ajaysingh-a.github.io/memdrive/> · [Privacy policy](https://ajaysingh-a.github.io/memdrive/privacy.html)
+
 > memdrive is an independent project. It is not made by or affiliated with the
 > claude-mem authors.
 

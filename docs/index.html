@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>memdrive</title>
+  <meta name="description" content="Free Google Drive backup and restore for claude-mem.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <nav>
+    <a href="./">Home</a>
+    <a href="privacy.html">Privacy</a>
+    <a href="terms.html">Terms</a>
+    <a href="https://github.com/AjaySingh-a/memdrive">GitHub</a>
+  </nav>
+
+  <header>
+    <h1>memdrive</h1>
+    <p class="lede">Free Google Drive backup and restore for
+      <a href="https://github.com/thedotmack/claude-mem">claude-mem</a>, the long-term memory for Claude Code.</p>
+  </header>
+
+  <p>claude-mem stores your memory on your computer. memdrive keeps a copy in
+    <strong>your own Google Drive</strong>, automatically, so it survives a broken laptop and
+    follows you to a new computer. It is free and open source, and your data never touches
+    anyone else's server.</p>
+
+  <h2>Install</h2>
+  <p>Install <a href="https://github.com/thedotmack/claude-mem">claude-mem</a> first, then:</p>
+  <p class="label">macOS and Linux</p>
+  <pre><code>curl -fsSL https://raw.githubusercontent.com/AjaySingh-a/memdrive/main/install.sh | bash</code></pre>
+  <p class="label">Windows (PowerShell)</p>
+  <pre><code>irm https://raw.githubusercontent.com/AjaySingh-a/memdrive/main/install.ps1 | iex</code></pre>
+  <p>Your browser opens and asks you to allow access to Google Drive. memdrive makes the first
+    backup and turns on automatic backups.</p>
+
+  <h2>What it does</h2>
+  <ul>
+    <li>Checks every hour, and backs up when your memory has changed and the last backup is more than 6 hours old.</li>
+    <li>Saves backups to <strong>Google Drive → memdrive → your computer's name</strong>.</li>
+    <li>Keeps your newest 5 backups always, and removes ones older than 30 days.</li>
+    <li>Restores on any computer with <code>memdrive restore</code>.</li>
+  </ul>
+
+  <h2>Your data</h2>
+  <p>memdrive uses Google's <code>drive.file</code> permission, so it can only see the files it
+    created. It cannot read anything else in your Drive. There is no memdrive server: backups go
+    straight from your computer to your Google Drive. Read the <a href="privacy.html">privacy policy</a>.</p>
+
+  <footer>
+    memdrive is an independent open-source project (MIT license). It is not made by or affiliated
+    with the claude-mem authors, Anthropic or Google.
+  </footer>
+</main>
+</body>
+</html>
