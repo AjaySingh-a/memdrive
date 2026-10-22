@@ -7,5 +7,5 @@
 // Users can bring their own client instead:
 //   memdrive connect --client-id <id> --client-secret <secret>
 // or set MEMDRIVE_CLIENT_ID / MEMDRIVE_CLIENT_SECRET.
-export const BUILTIN_CLIENT_ID = "";
-export const BUILTIN_CLIENT_SECRET = "";
+export const BUILTIN_CLIENT_ID = "283813064942-s9pfeuhj03ptkglbu2o9su5k32im763r.apps.googleusercontent.com";
+export const BUILTIN_CLIENT_SECRET = "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";
